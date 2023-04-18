@@ -109,37 +109,35 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  FATFS fs;
-  HAL_StatusTypeDef ret;
-  FRESULT fres;
-  FIL f;
+//  FATFS fs;
+//  HAL_StatusTypeDef ret;
+//  FRESULT fres;
+//  FIL f;
+//
+//  fres = InitFS(&fs);
+//  if (fres != FR_OK) {
+//	  Error_Handler();
+//  }
 
-  fres = InitFS(&fs);
-  if (fres != FR_OK) {
-	  Error_Handler();
-  }
+//  HAL_StatusTypeDef res = InitIMU();
+//  if (res != HAL_OK) {
+//	  Error_Handler();
+//  }
 
-
-  HAL_StatusTypeDef res = InitIMU();
-  if (res != HAL_OK) {
-	  Error_Handler();
-  }
-
-
-  //Junk begins here
-  uint16_t count = 0;
-  double val = 0.0;
-  int16_t val_x = 0;
-  int16_t val_y = 0;
-  int16_t val_z = 0;
-  uint8_t buf[6] = {0, 0, 0, 0, 0, 0} ;
-  uint8_t str[20];
-  UINT writeBytes = 0;
-
-  fres = f_open(&f, "log3.txt", FA_CREATE_ALWAYS| FA_WRITE);
-  if (fres != FR_OK){
-	  Error_Handler();
-  }
+//  //Junk begins here
+//  uint16_t count = 0;
+//  double val = 0.0;
+//  int16_t val_x = 0;
+//  int16_t val_y = 0;
+//  int16_t val_z = 0;
+//  uint8_t buf[6] = {0, 0, 0, 0, 0, 0} ;
+//  uint8_t str[20];
+//  UINT writeBytes = 0;
+//
+//  fres = f_open(&f, "log3.txt", FA_CREATE_ALWAYS| FA_WRITE);
+//  if (fres != FR_OK){
+//	  Error_Handler();
+//  }
 
   /* USER CODE END 2 */
 
@@ -147,49 +145,55 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+	    /* USER CODE END WHILE */
+	    /* USER CODE BEGIN 3 */
 
-    /* USER CODE BEGIN 3 */
-	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
-	  //HAL_Delay(100);
+//	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
+//	  //HAL_Delay(100);
+//
+//
+//	  // collect and log a bunch of samples
+//	  if (count < 10000) {
+//		ret = HAL_I2C_Mem_Read(&hi2c1, ADXL343_ADDR, ADXL343_REG_DATAX0, 1, buf, 6, 10);
+//		if (ret != HAL_OK) {
+//			Error_Handler();
+//		}
+//
+//		val_x = (buf[1] << 8) + buf[0];
+//		val_y = (buf[3] << 8) + buf[2];
+//		val_z = (buf[5] << 8) + buf[4];
+//		val = ADXL343_SCALE_8G * val_z;
+//
+//		sprintf(str, "%f, %d\n", val, count);
+//		fres = f_write(&f, str, strlen(str), &writeBytes);
+//		if (fres != FR_OK){
+//			return fres;
+//		}
+//		/*
+//		if (f_printf(&f, "%5f, %d\n", val, count) < 0) {
+//			Error_Handler();
+//		}
+//		*/
+//
+//		++count;
+//	  }
+//	  else if (count == 10000) {
+//		  fres = f_close(&f);
+//		  if (fres != FR_OK) {
+//			  Error_Handler();
+//		  }
+//		  ++count;
+//	  }
+//	  else {
+//	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+//	  HAL_Delay(100);
+//	  }
 
 
-	  // collect and log a bunch of samples
-	  if (count < 10000) {
-		ret = HAL_I2C_Mem_Read(&hi2c1, ADXL343_ADDR, ADXL343_REG_DATAX0, 1, buf, 6, 10);
-		if (ret != HAL_OK) {
-			Error_Handler();
-		}
-
-		val_x = (buf[1] << 8) + buf[0];
-		val_y = (buf[3] << 8) + buf[2];
-		val_z = (buf[5] << 8) + buf[4];
-		val = ADXL343_SCALE_8G * val_z;
-
-		sprintf(str, "%f, %d\n", val, count);
-		fres = f_write(&f, str, strlen(str), &writeBytes);
-		if (fres != FR_OK){
-			return fres;
-		}
-		/*
-		if (f_printf(&f, "%5f, %d\n", val, count) < 0) {
-			Error_Handler();
-		}
-		*/
-
-		++count;
-	  }
-	  else if (count == 10000) {
-		  fres = f_close(&f);
-		  if (fres != FR_OK) {
-			  Error_Handler();
-		  }
-		  ++count;
-	  }
-	  else {
-	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
-	  HAL_Delay(100);
-	  }
+	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+	  HAL_Delay(500);
+	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
+	  HAL_Delay(500);
 
   }
   /* USER CODE END 3 */
@@ -373,10 +377,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1|GPIO_PIN_6, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PC1 PC6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -386,6 +393,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
