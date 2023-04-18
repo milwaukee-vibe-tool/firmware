@@ -49,6 +49,7 @@ DMA_HandleTypeDef hdma_sdio_tx;
 
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
 BluetoothConfig bluetoothConfig = {
@@ -118,6 +119,8 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  bluetoothConfig.uart->RxCpltCallback = HAL_UART_RxCpltCallback;
+  bluetoothConfig.uart->TxCpltCallback = HAL_UART_TxCpltCallback;
   bluetooth_init(&bluetoothConfig, &bluetoothController);
 
 //  FATFS fs;
@@ -203,7 +206,7 @@ int main(void)
 
 	  	  bluetooth_run(&bluetoothController);
 
-	  	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
 	  	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
@@ -360,6 +363,9 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);

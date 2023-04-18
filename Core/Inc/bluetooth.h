@@ -10,8 +10,15 @@ typedef struct {
 	UART_HandleTypeDef *uart;
 } BluetoothConfig;
 
+typedef enum {
+	BLUETOOTH_NOT_READY,
+	BLUETOOTH_WAITING_FOR_HEADER,
+	BLUETOOTH_WAITING_FOR_PAYLOAD,
+} BluetoothState;
+
 typedef struct {
 	UART_HandleTypeDef *uart;
+	BluetoothState state;
 	uint8_t write_buffer[BLUETOOTH_WRITE_BUFFER_SIZE];
 	uint8_t read_buffer[BLUETOOTH_READ_BUFFER_SIZE];
 } BluetoothController;
