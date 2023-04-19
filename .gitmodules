@@ -1,0 +1,3 @@
+[submodule "protobuf"]
+	path = protobuf
+	url = git@github.com:milwaukee-vibe-tool/protobuf.git
