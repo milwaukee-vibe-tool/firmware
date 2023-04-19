@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "request.pb-c.h"
+#include "protos/request.pb-c.h"
 
 #define COMMAND_CHANGE_NAME "+++\nAT+GAPDEVNAME=Milwaukee Vibe Tool\n+++\n"
 
