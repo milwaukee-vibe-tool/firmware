@@ -206,7 +206,7 @@ int main(void)
 
 	  	  bluetooth_run(&bluetoothController);
 
-	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_8);
+	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
 	  	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
@@ -400,7 +400,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1|GPIO_PIN_6, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PC1 PC6 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_6;
@@ -415,8 +415,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  /*Configure GPIO pins : PB8 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
