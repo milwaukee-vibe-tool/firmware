@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "request.pb-c.h"
+
 #define COMMAND_CHANGE_NAME "+++\nAT+GAPDEVNAME=Milwaukee Vibe Tool\n+++\n"
 
 #define HEADER_OFFSET_HEADER_START 0
