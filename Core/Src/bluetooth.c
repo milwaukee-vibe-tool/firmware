@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "protos/request.pb-c.h"
-
 #define COMMAND_CHANGE_NAME "+++\nAT+GAPDEVNAME=Milwaukee Vibe Tool\n+++\n"
 
 #define HEADER_OFFSET_HEADER_START 0
@@ -15,6 +13,51 @@
 #define GET_UINT16(b, i) ((uint16_t)((b[i+0] << 0) | (b[i+1] << 8)))
 
 #define HEADER_START 0x0045
+
+// todo: replace with protobuf
+typedef enum {
+	REQUEST_GET_VALUES,
+	REQUEST_TURN_ON_LED,
+	REQUEST_TURN_OFF_LED,
+} REQUESTS;
+
+#define RESPONSE_ACK "ACK"
+
+// todo: replace with real values
+static const float mock_values[32] = {
+		4.000000,
+		4.780361,
+		5.530734,
+		6.222281,
+		6.828427,
+		7.325878,
+		7.695518,
+		7.923141,
+		8.000000,
+		7.923141,
+		7.695518,
+		7.325878,
+		6.828427,
+		6.222281,
+		5.530734,
+		4.780361,
+		4.000000,
+		3.219639,
+		2.469266,
+		1.777719,
+		1.171573,
+		0.674122,
+		0.304482,
+		0.076859,
+		0.000000,
+		0.076859,
+		0.304482,
+		0.674122,
+		1.171573,
+		1.777719,
+		2.469266,
+		3.219639,
+};
 
 static void await_header(BluetoothController *controller);
 static void await_partial_header(BluetoothController *controller);
@@ -44,11 +87,6 @@ HAL_StatusTypeDef bluetooth_run(BluetoothController *controller)
 
 void bluetooth_uart_rx(BluetoothController *controller)
 {
-//	await_header(controller);
-//	for (int i = 0; i < 10; i++) {
-//		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-//		HAL_Delay(1000);
-//	}
 	switch (controller->state) {
 	case BLUETOOTH_WAITING_FOR_HEADER:
 	case BLUETOOTH_WAITING_FOR_PARTIAL_HEADER:
@@ -56,6 +94,7 @@ void bluetooth_uart_rx(BluetoothController *controller)
 			await_partial_header(controller);
 			break;
 		}
+	  	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
 		await_payload(controller);
 		break;
 	case BLUETOOTH_WAITING_FOR_PAYLOAD:
@@ -109,9 +148,25 @@ static bool verify_checksum(BluetoothController *controller)
 
 static void formulate_response(BluetoothController *controller)
 {
-	for (int i = 0; i < 20; i++) {
-	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
-	  	  HAL_Delay(200);
+	controller->tx_buffer[HEADER_OFFSET_HEADER_START] = HEADER_START;
+
+	switch (controller->rx_buffer[HEADER_SIZE]) {
+	case REQUEST_GET_VALUES:
+		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(mock_values);
+		memcpy(&controller->tx_buffer[HEADER_SIZE], mock_values, sizeof(mock_values));
+		break;
+	case REQUEST_TURN_ON_LED:
+		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(RESPONSE_ACK);
+		memcpy(&controller->tx_buffer[HEADER_SIZE], RESPONSE_ACK, sizeof(RESPONSE_ACK));
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
+		break;
+	case REQUEST_TURN_OFF_LED:
+		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(RESPONSE_ACK);
+		memcpy(&controller->tx_buffer[HEADER_SIZE], RESPONSE_ACK, sizeof(RESPONSE_ACK));
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
+		break;
 	}
+
+	HAL_UART_Transmit(controller->uart, controller->tx_buffer, HEADER_SIZE + GET_UINT16(controller->tx_buffer, HEADER_OFFSET_PAYLOAD_LENGTH), -1);
 }
 

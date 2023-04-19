@@ -205,9 +205,6 @@ int main(void)
 //	  }
 
 	  	  bluetooth_run(&bluetoothController);
-
-	  	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
-	  	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
