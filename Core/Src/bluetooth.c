@@ -19,6 +19,7 @@ typedef enum {
 	REQUEST_GET_VALUES,
 	REQUEST_TURN_ON_LED,
 	REQUEST_TURN_OFF_LED,
+	REQUEST_TOGGLE_LED,
 } REQUESTS;
 
 #define RESPONSE_ACK "ACK"
@@ -94,7 +95,6 @@ void bluetooth_uart_rx(BluetoothController *controller)
 			await_partial_header(controller);
 			break;
 		}
-	  	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
 		await_payload(controller);
 		break;
 	case BLUETOOTH_WAITING_FOR_PAYLOAD:
@@ -164,6 +164,11 @@ static void formulate_response(BluetoothController *controller)
 		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(RESPONSE_ACK);
 		memcpy(&controller->tx_buffer[HEADER_SIZE], RESPONSE_ACK, sizeof(RESPONSE_ACK));
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
+		break;
+	case REQUEST_TOGGLE_LED:
+		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(RESPONSE_ACK);
+		memcpy(&controller->tx_buffer[HEADER_SIZE], RESPONSE_ACK, sizeof(RESPONSE_ACK));
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 		break;
 	}
 
