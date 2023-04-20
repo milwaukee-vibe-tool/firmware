@@ -24,26 +24,6 @@ typedef enum {
 
 #define RESPONSE_ACK "ACK"
 
-// todo: replace with real values
-static const uint8_t mock_values[] = {
-		0x64,0x69,0x6e,0x73,0x78,0x7c,0x81,0x86,
-		0x8a,0x8f,0x93,0x97,0x9c,0xa0,0xa3,0xa7,
-		0xab,0xae,0xb1,0xb4,0xb7,0xba,0xbc,0xbe,
-		0xc0,0xc2,0xc4,0xc5,0xc6,0xc7,0xc8,0xc8,
-		0xc8,0xc8,0xc8,0xc7,0xc6,0xc5,0xc4,0xc2,
-		0xc0,0xbe,0xbc,0xba,0xb7,0xb4,0xb1,0xae,
-		0xab,0xa7,0xa3,0xa0,0x9c,0x97,0x93,0x8f,
-		0x8a,0x86,0x81,0x7c,0x78,0x73,0x6e,0x69,
-		0x64,0x5f,0x5a,0x55,0x50,0x4c,0x47,0x42,
-		0x3e,0x39,0x35,0x31,0x2c,0x28,0x25,0x21,
-		0x1d,0x1a,0x17,0x14,0x11,0xe,0xc,0xa,
-		0x8,0x6,0x4,0x3,0x2,0x1,0x0,0x0,
-		0x0,0x0,0x0,0x1,0x2,0x3,0x4,0x6,
-		0x8,0xa,0xc,0xe,0x11,0x14,0x17,0x1a,
-		0x1d,0x21,0x25,0x28,0x2c,0x31,0x35,0x39,
-		0x3e,0x42,0x47,0x4c,0x50,0x55,0x5a,0x5f,
-};
-
 static void await_header(BluetoothController *controller);
 static void await_partial_header(BluetoothController *controller);
 static void await_payload(BluetoothController *controller);
@@ -57,6 +37,8 @@ HAL_StatusTypeDef bluetooth_init(BluetoothConfig *config, BluetoothController *c
 {
 	controller->uart= config->uart;
 	controller->state = BLUETOOTH_NOT_READY;
+	controller->value_index = 0;
+	controller->value_count = 0;
 
 	HAL_UART_Transmit(controller->uart, (uint8_t*)COMMAND_CHANGE_NAME, sizeof(COMMAND_CHANGE_NAME)-1, -1);
 
@@ -65,8 +47,14 @@ HAL_StatusTypeDef bluetooth_init(BluetoothConfig *config, BluetoothController *c
 	return HAL_OK;
 }
 
-HAL_StatusTypeDef bluetooth_run(BluetoothController *controller)
+HAL_StatusTypeDef bluetooth_transmit_value(BluetoothController *controller, float value)
 {
+	controller->value_buffer[(controller->value_index + controller->value_count) % BLUETOOTH_VALUE_BUFFER_SIZE] = value;
+	if (controller->value_count < BLUETOOTH_VALUE_BUFFER_SIZE)
+		controller->value_count++;
+	else
+		controller->value_index = (controller->value_index + 1) % BLUETOOTH_VALUE_BUFFER_SIZE;
+
 	return HAL_OK;
 }
 
@@ -136,8 +124,18 @@ static void formulate_response(BluetoothController *controller)
 
 	switch (controller->rx_buffer[HEADER_SIZE]) {
 	case REQUEST_GET_VALUES:
-		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(mock_values);
-		memcpy(&controller->tx_buffer[HEADER_SIZE], mock_values, sizeof(mock_values));
+		if (controller->value_index + controller->value_count < BLUETOOTH_VALUE_BUFFER_SIZE) {
+			memcpy(&controller->tx_buffer[HEADER_SIZE], &controller->value_buffer[controller->value_index], controller->value_count * sizeof(controller->value_buffer[0]));
+			controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = controller->value_count;
+		} else {
+			int first_count = BLUETOOTH_VALUE_BUFFER_SIZE - controller->value_index;
+			memcpy(&controller->tx_buffer[HEADER_SIZE], &controller->value_buffer[controller->value_index], first_count * sizeof(controller->value_buffer[0]));
+			int second_count = (controller->value_index + controller->value_count) % BLUETOOTH_VALUE_BUFFER_SIZE;
+			memcpy(&controller->tx_buffer[HEADER_SIZE + first_count * sizeof(controller->value_buffer[0])], &controller->value_buffer[0], second_count * sizeof(controller->value_buffer[0]));
+			controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = first_count + second_count;
+		}
+		controller->value_index = 0;
+		controller->value_count = 0;
 		break;
 	case REQUEST_TURN_ON_LED:
 		controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = sizeof(RESPONSE_ACK);
@@ -158,4 +156,3 @@ static void formulate_response(BluetoothController *controller)
 
 	HAL_UART_Transmit(controller->uart, controller->tx_buffer, HEADER_SIZE + GET_UINT16(controller->tx_buffer, HEADER_OFFSET_PAYLOAD_LENGTH), -1);
 }
-

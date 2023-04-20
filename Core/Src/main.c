@@ -119,39 +119,39 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  FATFS fs;
+  HAL_StatusTypeDef ret;
+  FRESULT fres;
+  FIL f;
+
+  fres = InitFS(&fs);
+  if (fres != FR_OK) {
+	  Error_Handler();
+  }
+
+  HAL_StatusTypeDef res = InitIMU();
+  if (res != HAL_OK) {
+	  Error_Handler();
+  }
+
   bluetoothConfig.uart->RxCpltCallback = HAL_UART_RxCpltCallback;
   bluetoothConfig.uart->TxCpltCallback = HAL_UART_TxCpltCallback;
   bluetooth_init(&bluetoothConfig, &bluetoothController);
 
-//  FATFS fs;
-//  HAL_StatusTypeDef ret;
-//  FRESULT fres;
-//  FIL f;
-//
-//  fres = InitFS(&fs);
-//  if (fres != FR_OK) {
-//	  Error_Handler();
-//  }
+  //Junk begins here
+  uint16_t count = 0;
+  double val = 0.0;
+  int16_t val_x = 0;
+  int16_t val_y = 0;
+  int16_t val_z = 0;
+  uint8_t buf[6] = {0, 0, 0, 0, 0, 0} ;
+  uint8_t str[20];
+  UINT writeBytes = 0;
 
-//  HAL_StatusTypeDef res = InitIMU();
-//  if (res != HAL_OK) {
-//	  Error_Handler();
-//  }
-
-//  //Junk begins here
-//  uint16_t count = 0;
-//  double val = 0.0;
-//  int16_t val_x = 0;
-//  int16_t val_y = 0;
-//  int16_t val_z = 0;
-//  uint8_t buf[6] = {0, 0, 0, 0, 0, 0} ;
-//  uint8_t str[20];
-//  UINT writeBytes = 0;
-//
-//  fres = f_open(&f, "log3.txt", FA_CREATE_ALWAYS| FA_WRITE);
-//  if (fres != FR_OK){
-//	  Error_Handler();
-//  }
+  fres = f_open(&f, "log3.txt", FA_CREATE_ALWAYS| FA_WRITE);
+  if (fres != FR_OK){
+	  Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
@@ -163,48 +163,49 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-//	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
-//	  //HAL_Delay(100);
-//
-//
-//	  // collect and log a bunch of samples
-//	  if (count < 10000) {
-//		ret = HAL_I2C_Mem_Read(&hi2c1, ADXL343_ADDR, ADXL343_REG_DATAX0, 1, buf, 6, 10);
-//		if (ret != HAL_OK) {
-//			Error_Handler();
-//		}
-//
-//		val_x = (buf[1] << 8) + buf[0];
-//		val_y = (buf[3] << 8) + buf[2];
-//		val_z = (buf[5] << 8) + buf[4];
-//		val = ADXL343_SCALE_8G * val_z;
-//
-//		sprintf(str, "%f, %d\n", val, count);
-//		fres = f_write(&f, str, strlen(str), &writeBytes);
-//		if (fres != FR_OK){
-//			return fres;
-//		}
-//		/*
-//		if (f_printf(&f, "%5f, %d\n", val, count) < 0) {
-//			Error_Handler();
-//		}
-//		*/
-//
-//		++count;
-//	  }
-//	  else if (count == 10000) {
-//		  fres = f_close(&f);
-//		  if (fres != FR_OK) {
-//			  Error_Handler();
-//		  }
-//		  ++count;
-//	  }
-//	  else {
-//	  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-//	  HAL_Delay(100);
-//	  }
+	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
+	  //HAL_Delay(100);
 
-	  	  bluetooth_run(&bluetoothController);
+
+	  // collect and log a bunch of samples
+	  if (count < 10000) {
+		ret = HAL_I2C_Mem_Read(&hi2c1, ADXL343_ADDR, ADXL343_REG_DATAX0, 1, buf, 6, 10);
+		if (ret != HAL_OK) {
+			Error_Handler();
+		}
+
+		val_x = (buf[1] << 8) + buf[0];
+		val_y = (buf[3] << 8) + buf[2];
+		val_z = (buf[5] << 8) + buf[4];
+		val = ADXL343_SCALE_8G * val_z;
+
+		sprintf(str, "%f, %d\n", val, count);
+		fres = f_write(&f, str, strlen(str), &writeBytes);
+		if (fres != FR_OK){
+			return fres;
+		}
+		/*
+		if (f_printf(&f, "%5f, %d\n", val, count) < 0) {
+			Error_Handler();
+		}
+		*/
+
+		if (count % 10 == 0)
+			bluetooth_transmit_value(&bluetoothController, val);
+
+		++count;
+	  }
+	  else if (count == 10000) {
+		  fres = f_close(&f);
+		  if (fres != FR_OK) {
+			  Error_Handler();
+		  }
+		  ++count;
+	  }
+	  else {
+		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+		  HAL_Delay(100);
+	  }
   }
   /* USER CODE END 3 */
 }
