@@ -132,7 +132,7 @@ static void formulate_response(BluetoothController *controller)
 			memcpy(&controller->tx_buffer[HEADER_SIZE], &controller->value_buffer[controller->value_index], first_count * sizeof(controller->value_buffer[0]));
 			int second_count = (controller->value_index + controller->value_count) % BLUETOOTH_VALUE_BUFFER_SIZE;
 			memcpy(&controller->tx_buffer[HEADER_SIZE + first_count * sizeof(controller->value_buffer[0])], &controller->value_buffer[0], second_count * sizeof(controller->value_buffer[0]));
-			controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = first_count + second_count;
+			controller->tx_buffer[HEADER_OFFSET_PAYLOAD_LENGTH] = (first_count + second_count) * sizeof(controller->value_buffer[0]);
 		}
 		controller->value_index = 0;
 		controller->value_count = 0;

@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bluetooth.h"
+#include <math.h>
 
 /* USER CODE END Includes */
 
@@ -147,6 +148,8 @@ int main(void)
   uint8_t buf[6] = {0, 0, 0, 0, 0, 0} ;
   uint8_t str[20];
   UINT writeBytes = 0;
+  double max_value = 0;
+  int sample_count = 50;
 
   fres = f_open(&f, "log3.txt", FA_CREATE_ALWAYS| FA_WRITE);
   if (fres != FR_OK){
@@ -166,9 +169,6 @@ int main(void)
 	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_1);
 	  //HAL_Delay(100);
 
-
-	  // collect and log a bunch of samples
-	  if (count < 10000) {
 		ret = HAL_I2C_Mem_Read(&hi2c1, ADXL343_ADDR, ADXL343_REG_DATAX0, 1, buf, 6, 10);
 		if (ret != HAL_OK) {
 			Error_Handler();
@@ -178,6 +178,10 @@ int main(void)
 		val_y = (buf[3] << 8) + buf[2];
 		val_z = (buf[5] << 8) + buf[4];
 		val = ADXL343_SCALE_8G * val_z;
+
+
+	  // collect and log a bunch of samples
+	  if (count < 10000) {
 
 		sprintf(str, "%f, %d\n", val, count);
 		fres = f_write(&f, str, strlen(str), &writeBytes);
@@ -190,22 +194,28 @@ int main(void)
 		}
 		*/
 
-		if (count % 10 == 0)
-			bluetooth_transmit_value(&bluetoothController, val);
-
-		++count;
 	  }
 	  else if (count == 10000) {
 		  fres = f_close(&f);
 		  if (fres != FR_OK) {
 			  Error_Handler();
 		  }
-		  ++count;
 	  }
 	  else {
 		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 		  HAL_Delay(100);
 	  }
+		++count;
+
+		double test_value = abs(val - 9);
+		if (test_value > max_value) {
+			max_value = test_value;
+		}
+
+		if (count % sample_count) {
+			bluetooth_transmit_value(&bluetoothController, max_value);
+			max_value = 0;
+		}
   }
   /* USER CODE END 3 */
 }
