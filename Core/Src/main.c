@@ -202,7 +202,7 @@ int main(void)
 		  }
 	  }
 	  else {
-		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+//		  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 		  HAL_Delay(100);
 	  }
 		++count;
@@ -216,6 +216,12 @@ int main(void)
 			bluetooth_transmit_value(&bluetoothController, max_value);
 			max_value = 0;
 		}
+
+		if (test_value >= 5.0) {
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
+		} else {
+			  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
+			}
   }
   /* USER CODE END 3 */
 }
