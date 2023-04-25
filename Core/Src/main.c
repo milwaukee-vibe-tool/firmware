@@ -142,6 +142,9 @@ int main(void)
   //Junk begins here
   uint16_t count = 0;
   double val = 0.0;
+  double val_x_d = 0.0;
+  double val_y_d = 0.0;
+  double val_z_d = 0.0;
   int16_t val_x = 0;
   int16_t val_y = 0;
   int16_t val_z = 0;
@@ -175,9 +178,13 @@ int main(void)
 		}
 
 		val_x = (buf[1] << 8) + buf[0];
+		val_x_d = ADXL343_SCALE_8G * ((double)val_x);
 		val_y = (buf[3] << 8) + buf[2];
+		val_y_d = ADXL343_SCALE_8G * ((double)val_y);
 		val_z = (buf[5] << 8) + buf[4];
-		val = ADXL343_SCALE_8G * val_z;
+		val_z_d = ADXL343_SCALE_8G * ((double)val_z);
+//		val = val_y_d;
+		val = sqrt(val_x_d*val_x_d + val_y_d*val_y_d + val_z_d*val_z_d) - 9.2;
 
 
 	  // collect and log a bunch of samples
@@ -207,7 +214,7 @@ int main(void)
 	  }
 		++count;
 
-		double test_value = abs(val - 9);
+		double test_value = (val > 0.0) ? val : val*-1;
 		if (test_value > max_value) {
 			max_value = test_value;
 		}
